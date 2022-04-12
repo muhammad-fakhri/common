@@ -315,24 +315,24 @@ func (lp *LogParams) injectRequestBody(ctx context.Context, r *http.Request) *Lo
 }
 
 func (lp *LogParams) injectResponseBody(ctx context.Context, rw *LoggingResponseWriter) *LogParams {
-	lp.fields[ResponseCodeKey] = rw.status
-	lp.fields[ResponseKey] = rw.body
+	lp.fields[ResponseCodeKey] = rw.Status
+	lp.fields[ResponseKey] = rw.Body
 	return lp
 }
 
 type LoggingResponseWriter struct {
-	status int
-	body   string
+	Status int
+	Body   string
 	http.ResponseWriter
 }
 
 func (w *LoggingResponseWriter) WriteHeader(code int) {
-	w.status = code
+	w.Status = code
 	w.ResponseWriter.WriteHeader(code)
 }
 
 func (w *LoggingResponseWriter) Write(body []byte) (int, error) {
-	w.body = string(body)
+	w.Body = string(body)
 	return w.ResponseWriter.Write(body)
 }
 
