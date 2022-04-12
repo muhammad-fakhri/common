@@ -21,7 +21,7 @@ type Logger interface {
 	AppendContextDataAndSetValue(r *http.Request, contextId string) *http.Request
 	SetContextDataAndSetValue(r *http.Request, data map[string]string, contextId string) *http.Request
 
-	CreateResponseWrapper(rw http.ResponseWriter) *loggingResponseWriter
+	CreateResponseWrapper(rw http.ResponseWriter) *LoggingResponseWriter
 
 	GetEntry() *log.Entry
 
@@ -39,7 +39,7 @@ type Logger interface {
 	InfoMap(ctx context.Context, dataMap map[string]interface{}, args ...interface{})
 
 	LogRequest(ctx context.Context, r *http.Request)
-	LogResponse(ctx context.Context, rw *loggingResponseWriter)
+	LogResponse(ctx context.Context, rw *LoggingResponseWriter)
 }
 
 // safe typing https://golang.org/pkg/context/#WithValue
@@ -157,8 +157,8 @@ func (l *Log) SetContextDataAndSetValue(r *http.Request, data map[string]string,
 	return r.WithContext(ctx)
 }
 
-func (l *Log) CreateResponseWrapper(rw http.ResponseWriter) *loggingResponseWriter {
-	return &loggingResponseWriter{
+func (l *Log) CreateResponseWrapper(rw http.ResponseWriter) *LoggingResponseWriter {
+	return &LoggingResponseWriter{
 		ResponseWriter: rw,
 	}
 }
@@ -258,7 +258,7 @@ func (l *Log) LogRequest(ctx context.Context, r *http.Request) {
 	l.entry.WithFields(lp.fields).Info("Request Body")
 }
 
-func (l *Log) LogResponse(ctx context.Context, rw *loggingResponseWriter) {
+func (l *Log) LogResponse(ctx context.Context, rw *LoggingResponseWriter) {
 	lp := LogParams{fields: log.Fields{}}
 	lp.setCallStackTrace(log.InfoLevel)
 	lp.injectContextDataMap(ctx).injectResponseBody(ctx, rw)
@@ -314,24 +314,24 @@ func (lp *LogParams) injectRequestBody(ctx context.Context, r *http.Request) *Lo
 	return lp
 }
 
-func (lp *LogParams) injectResponseBody(ctx context.Context, rw *loggingResponseWriter) *LogParams {
+func (lp *LogParams) injectResponseBody(ctx context.Context, rw *LoggingResponseWriter) *LogParams {
 	lp.fields[ResponseCodeKey] = rw.status
 	lp.fields[ResponseKey] = rw.body
 	return lp
 }
 
-type loggingResponseWriter struct {
+type LoggingResponseWriter struct {
 	status int
 	body   string
 	http.ResponseWriter
 }
 
-func (w *loggingResponseWriter) WriteHeader(code int) {
+func (w *LoggingResponseWriter) WriteHeader(code int) {
 	w.status = code
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func (w *loggingResponseWriter) Write(body []byte) (int, error) {
+func (w *LoggingResponseWriter) Write(body []byte) (int, error) {
 	w.body = string(body)
 	return w.ResponseWriter.Write(body)
 }
